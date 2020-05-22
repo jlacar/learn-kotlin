@@ -1,0 +1,4 @@
+package codewars
+
+class NumericPuzzles {
+}
