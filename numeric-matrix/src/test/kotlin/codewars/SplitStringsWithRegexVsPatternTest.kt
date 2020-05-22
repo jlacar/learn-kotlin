@@ -1,73 +1,64 @@
 package codewars
 
-import org.junit.jupiter.api.Test
-
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.EmptySource
 import org.junit.jupiter.params.provider.MethodSource
-import org.junit.jupiter.params.provider.ValueSource
-import java.util.regex.Pattern
 
-internal class RegexPatternTest {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+internal class SplitStringsWithRegexVsPatternTest {
 
-    private val regexString = "(?<=\\G.{2})"
-    private val byRegex: Regex = regexString.toRegex()
-    private val byPattern: Pattern = Pattern.compile(regexString)
+    private val expr = "(?<=\\G.{2})"
+    private val regex = expr.toRegex()
+    private val pattern = expr.toPattern()
 
-    private companion object {
-        @JvmStatic
-        fun allStrings() = arrayOf("a", "ab", "abc", "abcd", "abcde", "abcdef")
+    private fun withTrailingEmpties() = arrayOf("ab", "abcd", "abcdef")
+    private fun withoutTrailingEmpties() = arrayOf("", "a", "abc", "abcde")
 
-        @JvmStatic
-        fun oddLengthStrings() = arrayOf("a", "abc", "abcde")
+    private fun keepsTrailingEmpties(results: List<String>) = results.last() == ""
+    private fun discardsTrailingEmpties(results: List<String>) = !keepsTrailingEmpties(results)
 
-        @JvmStatic
-        fun evenLengthStrings() = arrayOf("ab", "abcd", "abcdef")
+    @ParameterizedTest(name = "splitting \"{0}\"")
+    @MethodSource("withTrailingEmpties")
+    fun `Kotlin keeps trailing empty strings by default`(s: String) {
+        assertAll(
+                { assertTrue(keepsTrailingEmpties(s.split(pattern)), "s.split(pattern)") },
+                { assertTrue(keepsTrailingEmpties(s.split(regex)), "s.split(regex)") },
+                { assertTrue(keepsTrailingEmpties(regex.split(s)), "regex.split(s)") }
+        )
     }
 
-    @ParameterizedTest
-    @MethodSource("allStrings")
-    fun `split should be symmetric for Regex and String`(s: String) {
-        assertEquals(byRegex.split(s).size, s.split(byRegex).size, "byRegex.split(s).size != s.split(byRegex).size")
+    @ParameterizedTest(name = "splitting \"{0}\"")
+    @MethodSource("withTrailingEmpties")
+    fun `Pattern keeps trailing empty strings with negative limit`(s: String) {
+        assertTrue(keepsTrailingEmpties(pattern.split(s, -1).toList()))
     }
 
-    @ParameterizedTest
-    @MethodSource("evenLengthStrings")
-    fun `Even-length strings - split should symmetric for Pattern and String`(s: String) {
-        assertEquals(byPattern.split(s).size, s.split(byPattern).size, "byPattern.split(s).size != s.split(byPattern).size")
+    @ParameterizedTest(name = "splitting \"{0}\"")
+    @MethodSource("withTrailingEmpties")
+    fun `Pattern discards trailing empty strings by default`(s: String) {
+        assertTrue(discardsTrailingEmpties(pattern.split(s).toList()))
     }
 
-    @ParameterizedTest(name = """Pattern.split("{0}").size should be {1}""")
-    @MethodSource("oddLengthStrings")
-    fun `Odd-length strings - split should symmetric for Pattern and String`(s: String) {
-        assertEquals(byPattern.split(s).size, s.split(byPattern).size, "byPattern.split(s).size != s.split(byPattern).size")
+    @ParameterizedTest(name = "splitting \"{0}\"")
+    @MethodSource("withoutTrailingEmpties")
+    fun `Pattern and Kotlin give the same results when no trailing empty strings`(s: String) {
+        assertAll(
+                { assertTrue(pattern.split(s).toList() == s.split(pattern)) },
+                { assertTrue(pattern.split(s).toList() == s.split(regex)) },
+                { assertTrue(pattern.split(s).toList() == regex.split(s)) }
+        )
     }
 
-    @ParameterizedTest(name = """Pattern.split("{0}").size should be {1}""")
-    @CsvSource(
-            "a, 1",
-            "ab, 1",
-            "abc, 2",
-            "abcd, 2",
-            "abcde, 3",
-            "abcdef, 3"
-    )
-    fun `using Pattern`(s: String, expectedPairs: Int) {
-        assertEquals(expectedPairs, byPattern.split(s).size, """byPattern.split("$s").size""")
+    @ParameterizedTest(name = "splitting \"{0}\"")
+    @MethodSource("withTrailingEmpties")
+    fun `Pattern and Kotlin give different results when there are trailing empty strings`(s: String) {
+        assertAll(
+                { assertTrue(pattern.split(s).toList() != s.split(pattern)) },
+                { assertTrue(pattern.split(s).toList() != s.split(regex)) },
+                { assertTrue(pattern.split(s).toList() != regex.split(s)) }
+        )
     }
-
-    @ParameterizedTest(name = """Regex.split("{0}").size should be {1}""")
-    @CsvSource(
-            "a, 1",
-            "ab, 1",
-            "abc, 2",
-            "abcd, 2",
-            "abcde, 3",
-            "abcdef, 3"
-    )
-    fun `using Regex`(s: String, expectedPairs: Int) {
-        assertEquals(expectedPairs, byRegex.split(s).size, """byRegex.split("$s").size""")
-    }
-
 }

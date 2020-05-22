@@ -1,34 +1,30 @@
 package numeric.matrix
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 internal class DoubleMatrixTest {
 
-    @org.junit.jupiter.api.Test
+    @Test
     fun getSize() {
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     fun testToString() {
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     fun isSquare() {
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     fun isNotSquare() {
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     fun plus() {
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     fun times() {
-    }
-
-    @org.junit.jupiter.api.Test
-    fun testTimes() {
     }
 }
